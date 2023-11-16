@@ -6,7 +6,7 @@ import useUser from "./useUser";
 import toast from "react-hot-toast";
 import axios from "axios";
 
-const useFollow = (userId: string ) => {
+const useFollow = (userId: string) => {
     const { data: currentUser, mutate: mutateCurrentUser } = useCurrentUser();
     const { mutate: mutateFetchedUser } = useUser(userId);
 
@@ -28,11 +28,13 @@ const useFollow = (userId: string ) => {
         //identify whether we already follow the user, and thus if want to follow/unfollow
             if (isFollowing) {
                 request = () => axios.delete('/api/follow', { data: { userId } });
+                //request = () => axios.delete(`/api/follow?userId=${userId}`);
             } else {
                 request = () => axios.post('/api/follow', { userId });
+                //request = () => axios.post(`/api/follow?userId=${userId}`);
             }
 
-            await request;
+            await request();
 
             mutateCurrentUser();
             mutateFetchedUser();

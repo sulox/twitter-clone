@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const { userId } = req.body;
+        const { userId } = req.body; //as { userId: string };
 
         const { currentUser } = await serverAuth(req, res);
 
@@ -33,6 +33,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         //handle if the request method is POSt
         if (req.method === 'POST') { //if we're adding the Follow we want to update the array of IDs we're following
             updatedFollowingIds.push(userId);
+
+            try {
+                await prisma.notification.create({
+                    data: {
+                        body: 'Someone followed you!',
+                        userId
+                    }
+                });
+
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { hasNotification: true }
+                })
+            } catch (error) {
+                console.log(error);
+            }
         }
         
         if (req.method === 'DELETE') {
@@ -40,12 +56,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } //we want to go through all IDs we follow and leave only those who are NOT the current userId
 
         const updatedUser = await prisma.user.update({
-            where: {
-                id: currentUser.id
-            },
-            data: {
-                followingIds: updatedFollowingIds
-            }
+            where: { id: currentUser.id },
+            data: { followingIds: updatedFollowingIds }
         });
 
         return res.status(200).json(updatedUser);
